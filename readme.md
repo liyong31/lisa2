@@ -90,10 +90,7 @@ To use the default setting to construct a DFA from an LTLf formula, type
     
         ./swift -ltlf ./examples/ltlf3377.ltlf
     
-    You are expected to see the output ending with "Number of states (or nodes) is: 78626".
-    In the DFA generation, the symbolic representation of DFA has been triggered.
-    As we usually do not count the number of states in a symbolic DFA, we only output the number of nodes in the BDD representation of the transition relation of the output DFA.
- 
+    You are expected to see the output ending with "3377" for the number of states.
 
 
 
