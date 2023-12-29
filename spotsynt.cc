@@ -1,0 +1,181 @@
+// Author: Yong Li (liyong@ios.ac.cn)
+
+#include "spotsynt.hh"
+
+using namespace spot;
+using namespace std;
+
+// Ensures that the game is complete for player 0.
+// Also computes the owner of each state (false for player 0, i.e. env).
+// Initial state belongs to Player 0 and the game is turn-based.
+static std::vector<bool>
+complete_env(spot::twa_graph_ptr &arena)
+{
+  unsigned sink_env = arena->new_state();
+  unsigned sink_con = arena->new_state();
+
+  auto um = arena->acc().unsat_mark();
+  if (!um.first)
+    throw std::runtime_error("game winning condition is a tautology");
+  arena->new_edge(sink_con, sink_env, bddtrue, um.second);
+  arena->new_edge(sink_env, sink_con, bddtrue, um.second);
+
+  std::vector<bool> seen(arena->num_states(), false);
+  std::vector<unsigned> todo({arena->get_init_state_number()});
+  std::vector<bool> owner(arena->num_states(), false);
+  owner[arena->get_init_state_number()] = false;
+  owner[sink_env] = true;
+  while (!todo.empty())
+  {
+    unsigned src = todo.back();
+    todo.pop_back();
+    seen[src] = true;
+    bdd missing = bddtrue;
+    for (const auto &e : arena->out(src))
+    {
+      if (!owner[src])
+        missing -= e.cond;
+
+      if (!seen[e.dst])
+      {
+        owner[e.dst] = !owner[src];
+        todo.push_back(e.dst);
+      }
+    }
+    if (!owner[src] && missing != bddfalse)
+      arena->new_edge(src, sink_con, missing, um.second);
+  }
+
+  return owner;
+}
+
+static spot::twa_graph_ptr
+to_dpa(const spot::twa_graph_ptr &split)
+{
+  // if the input automaton is deterministic, degeneralize it to be sure to
+  // end up with a parity automaton
+  auto dpa = spot::tgba_determinize(split,
+                                    false, true, true, false);
+  dpa->merge_edges();
+  if (false)
+    dpa = spot::sbacc(dpa);
+  spot::reduce_parity_here(dpa, true);
+  spot::change_parity_here(dpa, spot::parity_kind_max,
+                           spot::parity_style_odd);
+  assert((
+      [&dpa]() -> bool {
+        bool max, odd;
+        dpa->acc().is_parity(max, odd);
+        return max && odd;
+      }()));
+  assert(spot::is_deterministic(dpa));
+  return dpa;
+}
+
+int solve_game(spot::twa_graph_ptr nba, std::vector<string>& input, std::vector<string>& output)
+{
+  
+  // now invoke ltlsynt
+  spot::bdd_dict_ptr dict = nba->get_dict();
+
+  cout << "number of input aps: " << input.size() << " number of output aps: " << output.size() << endl;
+  bdd all_inputs = bddtrue;
+  bdd all_outputs = bddtrue;
+  for (string &in : input)
+  {
+    formula f = formula::ap(in);
+    // cout << "in: " << f << endl;
+    unsigned v = nba->register_ap(f);
+    all_inputs &= bdd_ithvar(v);
+  }
+  //cout << "done with input propositions" << endl;
+  for (string &out : output)
+  {
+    formula f = formula::ap(out);
+    // cout << "out: " << f << endl;
+    unsigned v = nba->register_ap(f);
+    all_outputs &= bdd_ithvar(v);
+  }
+  spot::process_timer timer;
+  timer.start();
+  spot::stopwatch sw;
+  spot::twa_graph_ptr dpa = nullptr;
+  sw.start();
+  /*
+  sw.start();
+  auto split = split_2step(nba, all_inputs);
+  double split_time = sw.stop();
+  std::cerr << "split inputs and outputs done in " << split_time
+              << " seconds\nautomaton has "
+              << split->num_states() << " states\n";
+  sw.start();
+  dpa = to_dpa(split);
+  std::cerr << "determinization done\nDPA has "
+              << dpa->num_states() << " states, "
+              << dpa->num_sets() << " colors\n";
+  dpa->merge_states();
+  double paritize_time = sw.stop();
+  std::cerr << "simplification done\nDPA has "
+              << dpa->num_states() << " states\n"
+              << "determinization and simplification took "
+              << paritize_time << " seconds\n";
+  */
+  // this setting seems to be more efficient
+  auto tmp = to_dpa(nba);
+  // ofstream os1("dpa.hoa");
+  // spot::print_hoa(os1, nba);
+  std::cerr << "DPA has "
+            << tmp->num_states() << " states, "
+            << tmp->num_sets() << " colors\n";
+  tmp->merge_states();
+  double paritize_time = sw.stop();
+  std::cerr << "simplification done\nDPA has "
+            << tmp->num_states() << " states\n"
+            << "simplification took: "
+            << paritize_time*1000.0 << "ms...\n";
+  sw.start();
+  dpa = split_2step(tmp, all_outputs);
+  spot::colorize_parity_here(dpa, true);
+  double split_time = sw.stop();
+  std::cerr << "split inputs and outputs done in " << split_time*1000.0
+            << "ms...\nautomaton has "
+            << tmp->num_states() << " states\n";
+  
+  unsigned nb_states_dpa = dpa->num_states();
+  sw.start();
+  
+  // auto owner = complete_env(dpa);
+  // auto pg = spot::parity_game(dpa, owner);
+  bool win = solve_parity_game(dpa);
+  double bgame_time = sw.stop();
+  std::cerr << "solve game in: " << bgame_time *1000.0 << "ms...\n";
+
+  if (win)
+  {
+    std::cout << "REALIZABLE\n";
+    // if (!opt_real)
+    // {
+    //     if (want_time)
+    //         sw.start();
+    //     auto strat_aut =
+    //         strat_to_aut(pg, strategy[1], dpa, all_outputs);
+    //     if (want_time)
+    //         strat2aut_time = sw.stop();
+
+    //     // output the winning strategy
+    //     if (opt_print_aiger)
+    //         spot::print_aiger(std::cout, strat_aut);
+    //     else
+    //     {
+    //         automaton_printer printer;
+    //         printer.print(strat_aut, timer);
+    //     }
+    // }
+    return 0;
+  }
+  else
+  {
+    std::cout << "UNREALIZABLE\n";
+    return 1;
+  }
+}
