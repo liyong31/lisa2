@@ -102,7 +102,7 @@ void print_usage()
 	cout << " -mona"<< "                  use MONA DFA for composition (Spot DFA used by default)" << endl;
 	// cout << " -part" << " <file>          the file specifying the input and output propositions" << endl;
 	cout << " -ltlf" << " <file>          the file specifying the input LTLf formula" << endl;
-	cout << " -out" << " <file>          the file for the minimal DFA" << endl;
+	cout << " -out" << " <file>           the file for the minimal DFA" << endl;
 	// cout << " -env" << "                  environment plays first" << endl;
 }
 
