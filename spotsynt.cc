@@ -60,7 +60,7 @@ int solve_game(spot::twa_graph_ptr nba, std::vector<string>& input, std::vector<
   sw.start();
   /*
   sw.start();
-  auto split = split_2step(nba, all_inputs);
+  auto split = split_2step(nba, all_inputs, true);
   double split_time = sw.stop();
   std::cerr << "split inputs and outputs done in " << split_time
               << " seconds\nautomaton has "
