@@ -1,7 +1,7 @@
 all: T
 
 T: 
-	g++ swift.cc  spotutil.cc ltlf2fol.cc spotsynt.cc mona.cc -o swift -lspot -lbddx -lcudd -lmonadfa -lmonamem -lmonabdd -O3
+	g++ swift.cc  spotutil.cc ltlf2fol.cc spotsynt.cc mona.cc -o swift -lspot -lbddx -lmonadfa -lmonamem -lmonabdd -O3
 
 
 #------------------------------------------------------
