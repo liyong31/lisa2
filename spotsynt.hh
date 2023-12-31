@@ -39,5 +39,8 @@
 #include <spot/twaalgos/split.hh>
 #include <spot/twaalgos/toparity.hh>
 
+spot::twa_graph_ptr
+to_dpa(const spot::twa_graph_ptr &split);
+
 // solve games
 int solve_game(spot::twa_graph_ptr nba, std::vector<std::string>& input, std::vector<std::string>& output);

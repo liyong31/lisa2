@@ -777,8 +777,10 @@ dfa_ptr composeASTMona(std::map<string, int>& namesMap,
     	int r = system(command.c_str());
 		int numAps = get_size_formula_ap(f);
 		char ** vars;
+		std::vector<char> filename_cstr(dfa_file_name.c_str(),
+                                  dfa_file_name.c_str() + dfa_file_name.size() + 1);
 		// char* monaFile = "./mona.dfa";
-		DFA* dfa = dfaImport("./mona.dfa", &vars, 0);
+		DFA* dfa = dfaImport(filename_cstr.data(), &vars, 0);
 		// cout << "dfa size: " << dfa->ns << endl;
 		// dict->register_all_variables_of(res, node);
 		int len = 0;
