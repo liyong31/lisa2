@@ -581,6 +581,16 @@ struct GreaterThanBySize
   }
 };
 
+bool isSinkSpot(twa_graph_ptr automaton, bool positive) {
+  bool has_one_state = automaton->num_states() == 1;
+  // only have sink loop
+  // init - l -> init, init -!l -> loop 
+  int init_state = automaton->get_init_state_number();
+
+  bool is_initial_state_final = true;
+  return has_one_state && (is_initial_state_final == positive);
+}
+
 // twa_graph_ptr composeOr(bdd_dict_ptr dict,
 // 	std::map<node_ptr, twa_graph_ptr>& map, node_ptr node);
 // twa_graph_ptr composeAnd(bdd_dict_ptr dict,
@@ -675,6 +685,12 @@ public:
 
 typedef shared_ptr<MonaDFA> dfa_ptr;
 
+bool isSink(dfa_ptr automaton, bool positive) {
+  bool has_one_state = automaton->numStates() == 1;
+  bool is_initial_state_final = automaton->get()->f[0] == 1;
+  return has_one_state && (is_initial_state_final == positive);
+}
+
 // dfa_ptr composeOrMona(char** vars,
 	// std::map<node_ptr, dfa_ptr>& map, node_ptr node);
 // dfa_ptr composeMona(std::map<dfa_ptr, std::vector<string>> namesMap,  dfaProductType opType,
@@ -700,6 +716,8 @@ dfa_ptr composeMona(dfaProductType opType, std::map<string, int>& namesMap
 		queue.push(dfa);
 	}
 
+	bool positive = (opType == dfaProductType::dfaOR);
+
         while (queue.size() > 1) {
 			// cout << "queue size: " << queue.size() << endl;
           dfa_ptr lhs = queue.top();
@@ -715,6 +733,10 @@ dfa_ptr composeMona(dfaProductType opType, std::map<string, int>& namesMap
 		  dfaFree(prod);
 		  std::vector<string> str;
           dfa_ptr dfa = std::make_shared<MonaDFA>(str, min);
+		   
+		  if (isSink(dfa, positive)) {
+      		return dfa;
+    	  }
           queue.push(dfa);
         }
     // we get the final one
