@@ -91,7 +91,7 @@ int solve_game(spot::twa_graph_ptr nba, std::vector<string>& input, std::vector<
             << "simplification took: "
             << paritize_time*1000.0 << "ms...\n";
   sw.start();
-  dpa = split_2step(tmp, all_outputs);
+  dpa = split_2step(tmp, all_outputs, true);
   spot::colorize_parity_here(dpa, true);
   double split_time = sw.stop();
   std::cerr << "split inputs and outputs done in " << split_time*1000.0
