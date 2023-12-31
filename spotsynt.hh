@@ -1,4 +1,5 @@
 // Author: Yong Li (liyong@ios.ac.cn)
+#pragma once
 
 #include <iostream>
 #include <string>
