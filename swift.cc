@@ -40,7 +40,7 @@
 #include "spotutil.hh"
 #include "debug.hh"
 #include "ltlf2fol.hh"
-#include "spotsynt.hh"
+// #include "spotsynt.hh"
 
 //#include "dfwamin3.hh"
 
@@ -97,10 +97,10 @@ void print_usage()
 	cout << "Read a formula file and output the number of states of the constructed DFA" << endl << endl;
 	cout << " Input options:" << endl;
 	cout << " -h  " << "                  show this help page" << endl;
-	cout << " -syn" << "                  synthesize after DFA construction (default false)" << endl;
+	// cout << " -syn" << "                  synthesize after DFA construction (default false)" << endl;
 	cout << " -dag" << "                  optimisations including demorgan and remove duplicates" << endl;
 	cout << " -mona"<< "                  use MONA DFA for composition (Spot DFA used by default)" << endl;
-	cout << " -part" << " <file>          the file specifying the input and output propositions" << endl;
+	// cout << " -part" << " <file>          the file specifying the input and output propositions" << endl;
 	cout << " -ltlf" << " <file>          the file specifying the input LTLf formula" << endl;
 	cout << " -out" << " <file>          the file for the minimal DFA" << endl;
 	// cout << " -env" << "                  environment plays first" << endl;
@@ -1043,18 +1043,18 @@ int main(int argc, char** argv)
 	
 	// synthesis 
 	// synthesisW
-	if (!opt->_synthesis) {
-		return 0;
-	}
-	if (opt->_mona) {
-		// dfa = fromMonaDFA(monaDfa, names);
-		comp_start = clock();
-		string filename = "mona.dfa";
-		outputMonaDFA(filename, monaDfa, names);
-		dfa = read_from_mona_file(filename.c_str(), dict);
-		comp_end = clock();
-		cout << "Time spent in DFA conversion: " << 1000.0 * (comp_end - comp_start)/CLOCKS_PER_SEC << "ms ..." << endl;
-	}
+	// if (!opt->_synthesis) {
+	// 	return 0;
+	// }
+	// if (opt->_mona) {
+	// 	// dfa = fromMonaDFA(monaDfa, names);
+	// 	comp_start = clock();
+	// 	string filename = "mona.dfa";
+	// 	outputMonaDFA(filename, monaDfa, names);
+	// 	dfa = read_from_mona_file(filename.c_str(), dict);
+	// 	comp_end = clock();
+	// 	cout << "Time spent in DFA conversion: " << 1000.0 * (comp_end - comp_start)/CLOCKS_PER_SEC << "ms ..." << endl;
+	// }
 	// if (opt->_mona) {
 	// 	// convert to spot DFA
 	// 	cout << "Synthesis by Syft..." << endl;
@@ -1063,24 +1063,24 @@ int main(int argc, char** argv)
 	// 	comp_end = clock();
 	// 	cout << "Time spent in synthesis: " << 1000.0 * (comp_end - comp_start)/CLOCKS_PER_SEC << "ms ..." << endl;
 	// }else {
-		vector<string> input;
-		vector<string> output;
-		// cout << "read part file " << endl;
-		if(opt->_parfile_name != nullptr)
-		{
-			read_from_part_file(opt->_parfile_name, input, output);
-		}else
-		{
-			cerr << "Please input the file name for inputs and outputs" << endl;
-			exit(-1);
-		}
+		// vector<string> input;
+		// vector<string> output;
+		// // cout << "read part file " << endl;
+		// if(opt->_parfile_name != nullptr)
+		// {
+		// 	read_from_part_file(opt->_parfile_name, input, output);
+		// }else
+		// {
+		// 	cerr << "Please input the file name for inputs and outputs" << endl;
+		// 	exit(-1);
+		// }
 
-		output.push_back(ALIVE_AP);
-		solve_game(dfa, input, output);
+		// output.push_back(ALIVE_AP);
+		// solve_game(dfa, input, output);
 	// }
 	
 	opt = nullptr;
-	c_end = clock();
+	// c_end = clock();
 	// cout << "Breakdown: " << sizes << endl;
-	cout << "Total runtime for synthesis: " << 1000.0 * (c_end - c_start)/CLOCKS_PER_SEC << "ms ..." << endl;
+	// cout << "Total runtime for synthesis: " << 1000.0 * (c_end - c_start)/CLOCKS_PER_SEC << "ms ..." << endl;
 }
