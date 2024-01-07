@@ -302,6 +302,15 @@ read_from_mona_file(const char * file_name, bdd_dict_ptr dict)
     return aut;
 }
 
+string 
+get_current_time_string()
+{
+     std::time_t time = std::time({});
+     int time_int = static_cast<int>(time);
+     std::srand(std::time({}));
+     int another_int = std::rand();
+     return std::to_string(time_int) + std::to_string(another_int); 
+}
 /*-------------------------------------------------------------------*/
 // execute mona to construct DFA for the input ltlf formula
 // NOT depend on ltlf2fol of Syft anymore
@@ -322,7 +331,7 @@ translate_ltlf_mona(formula f, bdd_dict_ptr dict)
     string command = "./ltlf2fol NNF " + fol_file_name + " > " + mona_file_name;
     system(command.c_str());
     */
-    string mona_file_name = "./ltlf.mona";
+    string mona_file_name = "./ltlf.mona" + get_current_time_string();
     ofstream ofs(mona_file_name, ofstream::out);
     ofs << "#LTLf formula" << endl;
     ofs << "#" << str_psl(f, true) << endl;
@@ -332,9 +341,16 @@ translate_ltlf_mona(formula f, bdd_dict_ptr dict)
     // the BNF form, and then convert it to fol formula
     ltlf_to_fol(ofs, bnf);
     ofs.close();
-    string dfa_file_name = "./mona.dfa";
+    string dfa_file_name = "./mona.dfa" + get_current_time_string();
     string command = "mona -u -xw " + mona_file_name+ " >" + dfa_file_name;
     int r = system(command.c_str());
     // if this turns to be a bottleneck, we need pthread to read from pipe
-    return read_from_mona_file(dfa_file_name.c_str(), dict);
+    twa_graph_ptr dfa = read_from_mona_file(dfa_file_name.c_str(), dict);
+    std::vector<char> mona_cstr(mona_file_name.c_str(),
+                                  mona_file_name.c_str() + mona_file_name.size() + 1);
+	std::remove(mona_cstr.data());
+    std::vector<char> dfa_cstr(dfa_file_name.c_str(),
+                                  dfa_file_name.c_str() + dfa_file_name.size() + 1);
+	std::remove(dfa_file_name.data());
+    return dfa;
 }

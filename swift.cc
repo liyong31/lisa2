@@ -762,7 +762,7 @@ dfa_ptr composeASTMona(std::map<string, int>& namesMap,
 		res = composeMona(dfaProductType::dfaOR, namesMap, map, node);
 	}else if (node->isLeaf()){
 		formula f = node->formula;
-		string mona_file_name = "./ltlf.mona";
+		string mona_file_name = "./ltlf.mona" + get_current_time_string();
     	ofstream ofs(mona_file_name, ofstream::out);
     	ofs << "#LTLf formula" << endl;
     	ofs << "#" << str_psl(f, true) << endl;
@@ -772,7 +772,7 @@ dfa_ptr composeASTMona(std::map<string, int>& namesMap,
     	// the BNF form, and then convert it to fol formula
     	ltlf_to_fol(ofs, bnf);
     	ofs.close();
-    	string dfa_file_name = "./mona.dfa";
+    	string dfa_file_name = "./mona.dfa" + get_current_time_string();
     	string command = "mona -u -xw " + mona_file_name+ " >" + dfa_file_name;
     	int r = system(command.c_str());
 		int numAps = get_size_formula_ap(f);
@@ -802,6 +802,10 @@ dfa_ptr composeASTMona(std::map<string, int>& namesMap,
 		dfa_ptr sdfa ( new MonaDFA(propNames, dfa));
 		// cout << "success free: " << propNames.size() << endl;
 		res = sdfa;
+		std::vector<char> mona_cstr(mona_file_name.c_str(),
+                                  mona_file_name.c_str() + mona_file_name.size() + 1);
+		std::remove(mona_cstr.data());
+		std::remove(filename_cstr.data());
 		// we know length 
 		// cout << "Leaf node: " << res->numStates() << endl;
 		// cout << "Prop num: " << len << endl;

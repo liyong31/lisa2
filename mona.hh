@@ -10,8 +10,11 @@
 #include <string>
 #include <set>
 #include <tuple>
+#include <ctime>
+#include <cstdlib>
 #include <sstream>
 #include <unordered_map>
+#include <locale>
 
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twa/twagraph.hh>
@@ -26,6 +29,9 @@ using namespace std;
 
 bool
 str_contain(string str, const char* match);
+
+string 
+get_current_time_string();
 
 void
 str_split(string str, vector<string>& result, char delim = ' ');
