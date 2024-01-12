@@ -73,6 +73,8 @@ static struct opt_t
 	// bool _out_start = false;
 	bool _env_first = false;
 
+	bool _verbose = false;
+
 }* opt;
 
 twa_graph_ptr minimize_explicit(twa_graph_ptr A)
@@ -103,6 +105,7 @@ void print_usage()
 	// cout << " -part" << " <file>          the file specifying the input and output propositions" << endl;
 	cout << " -ltlf" << " <file>          the file specifying the input LTLf formula" << endl;
 	cout << " -out" << " <file>           the file for the minimal DFA" << endl;
+	cout << " -v  " << "                  the file for the minimal DFA" << endl;
 	// cout << " -env" << "                  environment plays first" << endl;
 }
 
@@ -141,6 +144,11 @@ void parse_opt(int argc, char** argv)
 		if(s == "-env")
 		{
 			opt->_env_first = true;
+			continue;
+		}
+		if(s == "-v")
+		{
+			opt->_verbose = true;
 			continue;
 		}
 		else if(s == "-ltlf" && i + 1 < argc)
@@ -295,12 +303,22 @@ OpNums estimateOpNums(const spot::formula& f, bool  pushInside)
     } else if (pushInside && f.kind() == op::G && f[0].kind() == op::And)
     {
 		int numChildren = f[0].size();
-		currOpNums.numDFAConversions += numChildren;
+		for (auto child : f[0]) {
+			formula gConjunct = formula::G(child);
+			OpNums childOpNums = estimateOpNums(gConjunct, pushInside);
+			currOpNums.numDFAConversions += childOpNums.numDFAConversions;
+			currOpNums.numCompositions += childOpNums.numCompositions;
+		}
 		currOpNums.numCompositions += (numChildren - 1);
     } else if (pushInside && f.kind() == op::F && f[0].kind() == op::Or)
     {
 		int numChildren = f[0].size();
-		currOpNums.numDFAConversions += numChildren;
+		for (auto child : f[0]) {
+			formula fDisjunct = formula::F(child);
+			OpNums childOpNums = estimateOpNums(fDisjunct, pushInside);
+			currOpNums.numDFAConversions += childOpNums.numDFAConversions;
+			currOpNums.numCompositions += childOpNums.numCompositions;
+		}
 		currOpNums.numCompositions += (numChildren - 1);
     } else
     {
@@ -308,6 +326,39 @@ OpNums estimateOpNums(const spot::formula& f, bool  pushInside)
     }
 
     return currOpNums;
+}
+
+int getASTSize(const spot::formula& f, bool pushInside)
+{
+	int size = 1;
+    if (f.kind() == op::And || f.kind() == op::Or)
+    {
+		int numChildren = f.size();
+        for (formula child: f)
+        {
+            int childSize = getASTSize(child, pushInside);
+			size += childSize;
+        }
+    } else if (pushInside && f.kind() == op::G && f[0].kind() == op::And)
+    {
+		for (auto child : f[0]) {
+			formula gConjunct = formula::G(child);
+			int childSize = getASTSize(gConjunct, pushInside);
+			size += childSize;
+		}
+    } else if (pushInside && f.kind() == op::F && f[0].kind() == op::Or)
+    {
+		for (auto child : f[0]) {
+			formula fDisjunct = formula::F(child);
+			int childSize = getASTSize(fDisjunct, pushInside);
+			size += childSize;
+		}
+    } else
+    {
+		size = 1;
+    }
+
+    return size;
 }
 
 
@@ -405,15 +456,39 @@ void printAST(node_ptr node, int indent = 0)
 
     if (node->opName == op::And || node->opName == op::Or )
     {
-        std::cout << indentStr << "Operator: " << opToString(node->opName) << std::endl;
+        std::cout << indentStr << "Operator: " << opToString(node->opName) << " id: " << node << std::endl;
     }
     else
     {
-        std::cout << indentStr << "Formula: " << (node->formula) << std::endl;
+        std::cout << indentStr << "Formula: " << (node->formula) << " id: " << node << std::endl;
     }
 
     for (auto child : node->children)
         printAST(child, indent + 4);
+}
+
+void printAST(spot::formula node, int indent = 0)
+{
+
+    std::string indentStr(indent, ' ');
+
+    if (node.kind() == op::And || node.kind() == op::Or )
+    {
+        std::cout << indentStr << "Operator: " << opToString(node.kind()) << std::endl;
+    }
+    else if (node.kind() == op::F && node[0].kind() == op::Or)
+    {
+        std::cout << indentStr << "Operator: " << opToString(op::Or) << std::endl;
+		for (auto child : node)
+        	printAST(formula::F(child), indent + 4);
+    }else if (node.kind() == op::G && node[0].kind() == op::And) {
+		std::cout << indentStr << "Operator: " << opToString(op::And) << std::endl;
+		for (auto child : node)
+        	printAST(formula::G(child), indent + 4);
+	}else {
+		std::cout << indentStr << "Formula: " << node << std::endl;
+	}
+   
 }
 
 
@@ -969,12 +1044,13 @@ int main(int argc, char** argv)
 	Stat stat;
 	cout << "Creating DAG for the formula" << endl;
     node_ptr dag = createAST(nodeMap, input_f, stat);
-	cout << "Nodes in syntax tree: " << stat.formula_size << endl;
+	cout << "Nodes in syntax tree: " << getASTSize(input_f, false) << endl;
 	OpNums inputNums = estimateOpNums(input_f, false);
 	//currOpNums.numDFAConversions += numChildren;
 	//	currOpNums.numCompositions += (numChildren - 1);
-	cout << "Estimated number of DFA conversion operaions in original syntax tree: " << inputNums.numDFAConversions << endl;
-	cout << "Estimated number of composition operaions in original syntax tree: " << inputNums.numCompositions << endl;
+	cout << "Estimated number of DFA conversion operaions in syntax tree: " << inputNums.numDFAConversions << endl;
+	cout << "Estimated number of composition operaions in syntax tree: " << inputNums.numCompositions << endl;
+	cout << "Nodes in pushed syntax tree: " << getASTSize(input_f, true) << endl;
 	inputNums = estimateOpNums(input_f, true);
 	cout << "Estimated number of DFA conversion operaions in pushed syntax tree: " << inputNums.numDFAConversions << endl;
 	cout << "Estimated number of composition operaions in pushed syntax tree: " << inputNums.numCompositions << endl;
@@ -995,6 +1071,14 @@ int main(int argc, char** argv)
 		inputNums = estimateOpNums(computedTable, dag);
 		cout << "Estimated number of DFA conversion operaions in reduced DAG: " << inputNums.numDFAConversions << endl;
 		cout << "Estimated number of composition operaions in reduced DAG: " << inputNums.numCompositions << endl;
+	}
+
+	if (opt->_verbose) {
+		cout << "Pushed syntax tree:" << endl;
+		printAST(input_f, 0);
+
+		cout << "Reduced DAG:" << endl;
+		printAST(dag, 0);
 	}
     
 	// printAST(newTree);
