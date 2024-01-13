@@ -700,8 +700,14 @@ twa_graph_ptr composeSpot(bdd_dict_ptr dict, spot::op opType,
 		}else {
 		  P = spot::product_or(first, second);
 		}
+		if (opt->_verbose) {
+          		cout << "A: " << first->num_states() << " B: " << second->num_states() << " product: " << P->num_states();
+          	}
 		P = minimize_explicit(P);	
 		// cout << "P: " << P->num_states() << endl;
+		if (opt->_verbose) {
+			 cout << " min_product: " << P->num_states() << endl;
+		}
 	
 		childrenSorted.push(P);
 	}
@@ -806,6 +812,9 @@ dfa_ptr composeMona(dfaProductType opType, std::map<string, int>& namesMap
 		// cout << "prod: " << prod->ns << endl;
 
 		  DFA* min = dfaMinimize(prod);
+		  if (opt->_verbose) {
+          		cout << "A: " << lhs->numStates() << " B: " << rhs->numStates() << " product: " << prod->ns << " min_product: " << min->ns << endl;
+          	}
 		// cout << "min: " << min->ns << endl;
 		  dfaFree(prod);
 		  std::vector<string> str;
