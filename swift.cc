@@ -475,18 +475,20 @@ void printAST(spot::formula node, int indent = 0)
     if (node.kind() == op::And || node.kind() == op::Or )
     {
         std::cout << indentStr << "Operator: " << opToString(node.kind()) << std::endl;
+		for (auto child : node)
+        	printAST(child, indent + 4);
     }
     else if (node.kind() == op::F && node[0].kind() == op::Or)
     {
         std::cout << indentStr << "Operator: " << opToString(op::Or) << std::endl;
-		for (auto child : node)
+		for (auto child : node[0])
         	printAST(formula::F(child), indent + 4);
     }else if (node.kind() == op::G && node[0].kind() == op::And) {
 		std::cout << indentStr << "Operator: " << opToString(op::And) << std::endl;
-		for (auto child : node)
+		for (auto child : node[0])
         	printAST(formula::G(child), indent + 4);
 	}else {
-		std::cout << indentStr << "Formula: " << node << std::endl;
+		std::cout << indentStr << "Formula: " << str_psl(node, false) << std::endl;
 	}
    
 }
