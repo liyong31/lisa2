@@ -1,9 +1,9 @@
-# swift
+# Lisa2
 
 Overview
 =======
 
-Swift is an LTLf to DFA conversion tool. 
+Lisa 2.0 is an LTLf to DFA conversion tool. 
 
 It is publicly available under the license GNU GPL v3.
 
@@ -11,7 +11,7 @@ It is publicly available under the license GNU GPL v3.
 Requirements
 -----------------------------------
 
-Swift requires a C++14-compliant compiler.  G++ 5.x or later should work.
+Lisa2 requires a C++14-compliant compiler.  G++ 5.x or later should work.
 
 Third-party dependencies
 -----------------------------------
@@ -20,8 +20,8 @@ Third-party dependencies
 
 * [MONA](https://github.com/liyong31/MONA)
 
-Swift is built on top of [Lisa](https://github.com/vardigroup/lisa) and relies on Spot and MONA to construct a DFA from a small LTLf formula.
-When constructing a DFA from an LTLf formula with MONA, Swift translates an LTLf formula to a formula in first order logic, which is then fed into MONA.
+Lisa2 is built on top of [Lisa](https://github.com/vardigroup/lisa) and relies on Spot and MONA to construct a DFA from a small LTLf formula.
+When constructing a DFA from an LTLf formula with MONA, Lisa2 translates an LTLf formula to a formula in first order logic, which is then fed into MONA.
 
 Complilation steps
 =======
@@ -55,9 +55,9 @@ In the following we assume that we will compile Lisa on a Ubuntu system.
     Note that MONA has explicit state representation but encodes the labels on transition symbolically.
     For more details on the representation of DFA in MONA, we refer to https://www.brics.dk/mona/mona14.pdf.
     
-6. Compile Swift
+6. Compile Lisa2
 
-    * Compile Swift with Make:
+    * Compile Lisa2 with Make:
     
             make T
 
@@ -65,7 +65,7 @@ In the following we assume that we will compile Lisa on a Ubuntu system.
 Input format
 =======
 
-Swift accepts LTLf formulas given as a .ltlf file written in SPOT format. 
+Lisa2 accepts LTLf formulas given as a .ltlf file written in SPOT format. 
 
 For synthesis, it also requires a .part file. The .part file indicates the input and output propostitions for the synthesis task. 
 
@@ -88,7 +88,7 @@ For LTLf to DFA construction
 ==
 To use the default setting to construct a DFA from an LTLf formula, type
     
-        ./swift -ltlf ./examples/ltlf3377.ltlf
+        ./lisa2 -ltlf ./examples/ltlf3377.ltlf
     
     You are expected to see the output ending with "3377" for the number of states.
 
