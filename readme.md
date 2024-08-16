@@ -3,7 +3,8 @@
 Overview
 =======
 
-Lisa 2.0 is an LTLf to DFA conversion tool. 
+Lisa 2.0 is an LTLf to DFA conversion tool.
+The previous version of Lisa features on a hybrid encoding for DFA construction, while this version only uses explicit state encoding. 
 
 It is publicly available under the license GNU GPL v3.
 
